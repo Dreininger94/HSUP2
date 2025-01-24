@@ -1,0 +1,9 @@
+{
+  "name": "saisie-heures",
+  "scripts": {
+    "dev": "vite"
+  },
+  "devDependencies": {
+    "vite": "^6.0.11"
+  }
+}

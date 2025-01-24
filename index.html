@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saisie des heures</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Saisie des heures</h1>
+
+    <div class="controls">
+      <select id="year-select">
+        <!-- Les options seront générées dynamiquement -->
+      </select>
+
+      <div class="buttons">
+        <button id="default-hours-btn">Horaires types</button>
+        <button id="replace-hours-btn">Remplacer heures</button>
+        <button id="clear-hours-btn">Effacer saisies</button>
+        <button id="export-csv-btn">Export CSV</button>
+      </div>
+    </div>
+
+    <!-- Modal pour les horaires types -->
+    <div id="default-hours-modal" class="modal">
+      <div class="modal-content">
+        <h2>Horaires types</h2>
+        <div class="modal-inputs">
+          <label>
+            Début:
+            <input type="text" id="default-start" maxlength="4">
+          </label>
+          <label>
+            Fin:
+            <input type="text" id="default-end" maxlength="4">
+          </label>
+        </div>
+        <button id="apply-default-hours">Appliquer</button>
+      </div>
+    </div>
+
+    <!-- Modal pour remplacer les heures -->
+    <div id="replace-hours-modal" class="modal">
+      <div class="modal-content">
+        <h2>Remplacer heures</h2>
+        <div class="modal-options">
+          <label>
+            <input type="radio" name="replace-option" value="start" checked>
+            Début
+          </label>
+          <label>
+            <input type="radio" name="replace-option" value="end">
+            Fin
+          </label>
+        </div>
+        <div class="modal-inputs">
+          <label>
+            Remplacer:
+            <input type="text" id="replace-from" maxlength="4">
+          </label>
+          <label>
+            Par:
+            <input type="text" id="replace-to" maxlength="4">
+          </label>
+        </div>
+        <button id="apply-replace-hours">Appliquer</button>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Jour</th>
+          <th>Début</th>
+          <th>Fin</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Le contenu sera généré dynamiquement -->
+      </tbody>
+    </table>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
