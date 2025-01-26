@@ -1,19 +1,37 @@
-// Fonction pour vérifier si un élément existe
-function elementExists(selector) {
-  return document.querySelector(selector) !== null;
-}
+// Fonctions utilitaires
+const elementExists = (selector) => document.querySelector(selector) !== null;
 
-// Fonction pour générer les options d'années
-function generateYearOptions() {
-  if (!elementExists('#year-select')) return;
+const formatDate = (date) => {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${day}/${month}/${date.getFullYear()}`;
+};
 
+const getDayName = (date) => {
+  const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+  return days[date.getDay()];
+};
+
+// Gestion des données
+const getSavedData = (date) => {
+  const savedData = localStorage.getItem(date);
+  return savedData ? JSON.parse(savedData) : {};
+};
+
+const saveData = (date, type, value) => {
+  const currentData = getSavedData(date);
+  currentData[type] = value;
+  localStorage.setItem(date, JSON.stringify(currentData));
+};
+
+// Génération des options d'année
+const generateYearOptions = () => {
   const yearSelect = document.getElementById('year-select');
-  const currentYear = new Date().getFullYear();
+  if (!yearSelect) return;
 
-  // Vider les options existantes
+  const currentYear = new Date().getFullYear();
   yearSelect.innerHTML = '';
 
-  // Ajouter les 5 dernières années en ordre décroissant
   for (let i = 0; i < 5; i++) {
     const year = currentYear - i;
     const option = document.createElement('option');
@@ -22,12 +40,11 @@ function generateYearOptions() {
     yearSelect.appendChild(option);
   }
 
-  // Sélectionner l'année courante par défaut
   yearSelect.value = currentYear;
-}
+};
 
-// Fonction pour générer toutes les dates d'une année
-function generateYearDates(year) {
+// Génération des dates de l'année
+const generateYearDates = (year) => {
   const dates = [];
   const date = new Date(year, 0, 1);
 
@@ -37,26 +54,13 @@ function generateYearDates(year) {
   }
 
   return dates;
-}
+};
 
-// Fonction pour formater la date en français
-function formatDate(date) {
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  return `${day}/${month}/${date.getFullYear()}`;
-}
-
-// Fonction pour obtenir le nom du jour en français
-function getDayName(date) {
-  const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-  return days[date.getDay()];
-}
-
-// Fonction pour mettre à jour le tableau
-function updateTable(year) {
-  if (!elementExists('tbody')) return;
-
+// Mise à jour du tableau
+const updateTable = (year) => {
   const tbody = document.querySelector('tbody');
+  if (!tbody) return;
+
   tbody.innerHTML = '';
 
   const dates = generateYearDates(year);
@@ -71,229 +75,222 @@ function updateTable(year) {
       <td>${getDayName(date)}</td>
       <td><input type="text" class="time-input" maxlength="4" data-date="${dateKey}" data-type="start" value="${savedData.start || ''}"></td>
       <td><input type="text" class="time-input" maxlength="4" data-date="${dateKey}" data-type="end" value="${savedData.end || ''}"></td>
+      <td><input type="checkbox" class="j1-checkbox" data-date="${dateKey}" ${savedData.j1 ? 'checked' : ''}></td>
     `;
 
     tbody.appendChild(row);
   });
 
-  applyInputValidation();
-  setupKeyboardNavigation();
-  setupDataSaving();
-}
+  setupInputHandlers();
+};
 
-// Obtenir les données sauvegardées pour une date
-function getSavedData(date) {
-  const savedData = localStorage.getItem(date);
-  return savedData ? JSON.parse(savedData) : {};
-}
-
-// Sauvegarder les données
-function saveData(date, type, value) {
-  const currentData = getSavedData(date);
-  currentData[type] = value;
-  localStorage.setItem(date, JSON.stringify(currentData));
-}
-
-// Appliquer la validation des champs de saisie
-function applyInputValidation() {
+// Gestion des interactions
+const setupInputHandlers = () => {
   const timeInputs = document.querySelectorAll('.time-input');
-
-  timeInputs.forEach(input => {
+  
+  timeInputs.forEach((input, index) => {
     input.addEventListener('input', (e) => {
       e.target.value = e.target.value.replace(/\D/g, '');
       if (e.target.value.length > 4) {
         e.target.value = e.target.value.slice(0, 4);
       }
     });
-  });
-}
 
-// Configuration de la sauvegarde des données
-function setupDataSaving() {
-  const inputs = document.querySelectorAll('.time-input');
-
-  inputs.forEach(input => {
     input.addEventListener('change', (e) => {
       const date = e.target.dataset.date;
       const type = e.target.dataset.type;
       const value = e.target.value;
-
       saveData(date, type, value);
     });
-  });
-}
 
-// Configuration de la navigation au clavier
-function setupKeyboardNavigation() {
-  const inputs = document.querySelectorAll('.time-input');
-
-  inputs.forEach((input, index) => {
     input.addEventListener('keydown', (e) => {
       const nextIndex = index + 1;
       const prevIndex = index - 1;
 
-      // Navigation avec les flèches
-      if (e.key === 'ArrowRight' && nextIndex < inputs.length) {
-        inputs[nextIndex].focus();
-      }
-      if (e.key === 'ArrowLeft' && prevIndex >= 0) {
-        inputs[prevIndex].focus();
-      }
-      if (e.key === 'ArrowDown') {
-        const nextRowIndex = index + 2;
-        if (nextRowIndex < inputs.length) {
-          inputs[nextRowIndex].focus();
-        }
-      }
-      if (e.key === 'ArrowUp') {
-        const prevRowIndex = index - 2;
-        if (prevRowIndex >= 0) {
-          inputs[prevRowIndex].focus();
-        }
-      }
-
-      // Validation avec Entrée
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        if (nextIndex < inputs.length) {
-          inputs[nextIndex].focus();
-        } else {
-          input.blur();
-        }
+      switch (e.key) {
+        case 'ArrowRight':
+          if (nextIndex < timeInputs.length) timeInputs[nextIndex].focus();
+          break;
+        case 'ArrowLeft':
+          if (prevIndex >= 0) timeInputs[prevIndex].focus();
+          break;
+        case 'ArrowDown':
+          const nextRowIndex = index + 2;
+          if (nextRowIndex < timeInputs.length) timeInputs[nextRowIndex].focus();
+          break;
+        case 'ArrowUp':
+          const prevRowIndex = index - 2;
+          if (prevRowIndex >= 0) timeInputs[prevRowIndex].focus();
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (nextIndex < timeInputs.length) {
+            timeInputs[nextIndex].focus();
+          } else {
+            e.target.blur();
+          }
+          break;
       }
     });
   });
-}
 
-// Gestion de la modal des horaires types
-function setupDefaultHours() {
-  if (!elementExists('#default-hours-modal')) return;
-
-  const modal = document.getElementById('default-hours-modal');
-  const openBtn = document.getElementById('default-hours-btn');
-  const applyBtn = document.getElementById('apply-default-hours');
-  const defaultStart = document.getElementById('default-start');
-  const defaultEnd = document.getElementById('default-end');
-
-  // Vérifier que tous les éléments nécessaires existent
-  if (!modal || !openBtn || !applyBtn || !defaultStart || !defaultEnd) return;
-
-  // Ouvrir la modal
-  openBtn.addEventListener('click', () => {
-    modal.style.display = 'block';
-  });
-
-  // Appliquer les horaires types
-  applyBtn.addEventListener('click', () => {
-    const startValue = defaultStart.value.replace(/\D/g, '');
-    const endValue = defaultEnd.value.replace(/\D/g, '');
-
-    if (startValue.length === 4 && endValue.length === 4) {
-      applyDefaultHours(startValue, endValue);
-      modal.style.display = 'none';
-      defaultStart.value = '';
-      defaultEnd.value = '';
-    }
-  });
-
-  // Fermer la modal en cliquant à l'extérieur
-  window.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      modal.style.display = 'none';
-    }
-  });
-
-  // Validation des champs de la modal
-  [defaultStart, defaultEnd].forEach(input => {
-    input.addEventListener('input', (e) => {
-      e.target.value = e.target.value.replace(/\D/g, '');
-      if (e.target.value.length > 4) {
-        e.target.value = e.target.value.slice(0, 4);
-      }
+  document.querySelectorAll('.j1-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', (e) => {
+      const date = e.target.dataset.date;
+      const currentData = getSavedData(date);
+      currentData.j1 = e.target.checked;
+      localStorage.setItem(date, JSON.stringify(currentData));
     });
   });
-}
+};
 
-// Appliquer les horaires types
-function applyDefaultHours(start, end) {
-  const inputs = document.querySelectorAll('.time-input');
+// Gestion des boutons
+const setupButtons = () => {
+  // Bouton Horaires types
+  const defaultHoursBtn = document.getElementById('default-hours-btn');
+  const defaultHoursModal = document.getElementById('default-hours-modal');
+  const applyDefaultBtn = document.getElementById('apply-default-hours');
+  const defaultStartInput = document.getElementById('default-start');
+  const defaultEndInput = document.getElementById('default-end');
 
-  inputs.forEach(input => {
-    const date = input.dataset.date;
-    const day = new Date(date.split('/').reverse().join('-')).getDay();
+  if (defaultHoursBtn && defaultHoursModal && applyDefaultBtn && defaultStartInput && defaultEndInput) {
+    defaultHoursBtn.addEventListener('click', () => {
+      defaultHoursModal.style.display = 'block';
+    });
 
-    // Ne pas appliquer aux week-ends (samedi=6, dimanche=0)
-    if (day !== 0 && day !== 6 && input.value === '') {
-      input.value = input.dataset.type === 'start' ? start : end;
-      saveData(date, input.dataset.type, input.value);
-    }
-  });
-}
-
-// Gestion de la modal de remplacement des heures
-function setupReplaceHours() {
-  if (!elementExists('#replace-hours-modal')) return;
-
-  const modal = document.getElementById('replace-hours-modal');
-  const openBtn = document.getElementById('replace-hours-btn');
-  const applyBtn = document.getElementById('apply-replace-hours');
-  const replaceFrom = document.getElementById('replace-from');
-  const replaceTo = document.getElementById('replace-to');
-
-  // Vérifier que tous les éléments nécessaires existent
-  if (!modal || !openBtn || !applyBtn || !replaceFrom || !replaceTo) return;
-
-  // Ouvrir la modal
-  openBtn.addEventListener('click', () => {
-    modal.style.display = 'block';
-  });
-
-  // Appliquer le remplacement
-  applyBtn.addEventListener('click', () => {
-    const fromValue = replaceFrom.value.replace(/\D/g, '');
-    const toValue = replaceTo.value.replace(/\D/g, '');
-    const option = document.querySelector('input[name="replace-option"]:checked').value;
-
-    if (fromValue.length === 4 && toValue.length === 4) {
-      replaceHours(option, fromValue, toValue);
-      modal.style.display = 'none';
-      replaceFrom.value = '';
-      replaceTo.value = '';
-    }
-  });
-
-  // Fermer la modal en cliquant à l'extérieur
-  window.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      modal.style.display = 'none';
-    }
-  });
-
-  // Validation des champs de la modal
-  [replaceFrom, replaceTo].forEach(input => {
-    input.addEventListener('input', (e) => {
-      e.target.value = e.target.value.replace(/\D/g, '');
-      if (e.target.value.length > 4) {
-        e.target.value = e.target.value.slice(0, 4);
+    applyDefaultBtn.addEventListener('click', () => {
+      const start = defaultStartInput.value.replace(/\D/g, '');
+      const end = defaultEndInput.value.replace(/\D/g, '');
+      
+      if (start.length === 4 && end.length === 4) {
+        applyDefaultHours(start, end);
+        defaultHoursModal.style.display = 'none';
+        defaultStartInput.value = '';
+        defaultEndInput.value = '';
       }
     });
-  });
-}
 
-// Fonction pour remplacer les heures
-function replaceHours(type, fromValue, toValue) {
+    window.addEventListener('click', (e) => {
+      if (e.target === defaultHoursModal) {
+        defaultHoursModal.style.display = 'none';
+      }
+    });
+
+    [defaultStartInput, defaultEndInput].forEach(input => {
+      input.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '');
+        if (e.target.value.length > 4) {
+          e.target.value = e.target.value.slice(0, 4);
+        }
+      });
+    });
+  }
+
+  // Bouton Remplacer heures
+  const replaceHoursBtn = document.getElementById('replace-hours-btn');
+  const replaceHoursModal = document.getElementById('replace-hours-modal');
+  const applyReplaceBtn = document.getElementById('apply-replace-hours');
+  const replaceFromInput = document.getElementById('replace-from');
+  const replaceToInput = document.getElementById('replace-to');
+
+  if (replaceHoursBtn && replaceHoursModal && applyReplaceBtn && replaceFromInput && replaceToInput) {
+    replaceHoursBtn.addEventListener('click', () => {
+      replaceHoursModal.style.display = 'block';
+    });
+
+    applyReplaceBtn.addEventListener('click', () => {
+      const from = replaceFromInput.value.replace(/\D/g, '');
+      const to = replaceToInput.value.replace(/\D/g, '');
+      const type = document.querySelector('input[name="replace-option"]:checked').value;
+      
+      if (from.length === 4 && to.length === 4) {
+        replaceHours(type, from, to);
+        replaceHoursModal.style.display = 'none';
+        replaceFromInput.value = '';
+        replaceToInput.value = '';
+      }
+    });
+
+    window.addEventListener('click', (e) => {
+      if (e.target === replaceHoursModal) {
+        replaceHoursModal.style.display = 'none';
+      }
+    });
+
+    [replaceFromInput, replaceToInput].forEach(input => {
+      input.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '');
+        if (e.target.value.length > 4) {
+          e.target.value = e.target.value.slice(0, 4);
+        }
+      });
+    });
+  }
+
+  // Bouton Effacer saisies
+  const clearHoursBtn = document.getElementById('clear-hours-btn');
+  if (clearHoursBtn) {
+    clearHoursBtn.addEventListener('click', () => {
+      if (confirm("Êtes-vous sûr de vouloir effacer toutes les saisies pour l'année en cours?")) {
+        clearCurrentYearData();
+      }
+    });
+  }
+
+  // Bouton Export CSV
+  const exportCsvBtn = document.getElementById('export-csv-btn');
+  if (exportCsvBtn) {
+    exportCsvBtn.addEventListener('click', () => {
+      const data = getAllSavedData();
+      if (data.length === 0) {
+        alert("Aucune donnée à exporter");
+        return;
+      }
+      const csvContent = convertToCSV(data);
+      downloadCSV(csvContent);
+    });
+  }
+};
+
+// Fonctions supplémentaires pour les boutons
+const applyDefaultHours = (start, end) => {
+  const rows = document.querySelectorAll('tbody tr'); // Sélectionner toutes les lignes du tableau
+
+  rows.forEach(row => {
+    const dayCell = row.querySelector('td:nth-child(2)'); // La colonne "Jour" est la 2ème colonne
+    const startInput = row.querySelector('input[data-type="start"]');
+    const endInput = row.querySelector('input[data-type="end"]');
+
+    // Vérifier si c'est un samedi ou un dimanche
+    if (dayCell && (dayCell.textContent === 'Samedi' || dayCell.textContent === 'Dimanche')) {
+      return; // Passer à la ligne suivante
+    }
+
+    // Appliquer les valeurs par défaut si les champs sont vides
+    if (startInput && startInput.value === '') {
+      startInput.value = start;
+      saveData(startInput.dataset.date, 'start', start);
+    }
+
+    if (endInput && endInput.value === '') {
+      endInput.value = end;
+      saveData(endInput.dataset.date, 'end', end);
+    }
+  });
+};
+
+
+const replaceHours = (type, from, to) => {
   const inputs = document.querySelectorAll(`.time-input[data-type="${type}"]`);
-
   inputs.forEach(input => {
-    if (input.value === fromValue) {
-      input.value = toValue;
-      saveData(input.dataset.date, type, toValue);
+    if (input.value === from) {
+      input.value = to;
+      saveData(input.dataset.date, type, to);
     }
   });
-}
+};
 
-// Fonction pour effacer les saisies pour l'année en cours
-function clearCurrentYearData() {
+const clearCurrentYearData = () => {
   const yearSelect = document.getElementById('year-select');
   const currentYear = Number(yearSelect.value);
   const dates = generateYearDates(currentYear);
@@ -303,129 +300,114 @@ function clearCurrentYearData() {
     localStorage.removeItem(dateKey);
   });
 
-  // Mettre à jour le tableau pour refléter les changements
   updateTable(currentYear);
-}
+};
 
-// Configuration du bouton d'effacement des saisies
-function setupClearHours() {
-  const clearBtn = document.getElementById('clear-hours-btn');
-
-  clearBtn.addEventListener('click', () => {
-    if (confirm("Êtes-vous sûr de vouloir effacer toutes les saisies pour l'année en cours?")) {
-      clearCurrentYearData();
-    }
-  });
-}
-
-// Gestion de l'export CSV
-function setupExportCSV() {
-  if (!elementExists('#export-csv-btn')) return;
-
-  const exportBtn = document.getElementById('export-csv-btn');
-
-  exportBtn.addEventListener('click', () => {
-    const data = getAllSavedData();
-    if (data.length === 0) {
-      alert("Aucune donnée à exporter");
-      return;
-    }
-
-    const csvContent = convertToCSV(data);
-    downloadCSV(csvContent);
-  });
-}
-
-// Obtenir toutes les données sauvegardées
-function getAllSavedData() {
+const getAllSavedData = () => {
   const data = [];
-
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(key)) { // Vérifier le format de date
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(key)) {
       const entry = JSON.parse(localStorage.getItem(key));
-      if (entry.start || entry.end) { // Ne prendre que les lignes avec des données
+      if (entry.start || entry.end || entry.j1) {
         data.push({
           date: key,
           start: entry.start || '',
-          end: entry.end || ''
+          end: entry.end || '',
+          j1: entry.j1 ? 'OUI' : 'NON'
         });
       }
     }
   }
-
   return data;
-}
+};
 
-// Convertir les données en CSV
-function convertToCSV(data) {
-  // Trier les données par date
+const convertToCSV = (data) => {
   data.sort((a, b) => new Date(a.date.split('/').reverse().join('-')) - new Date(b.date.split('/').reverse().join('-')));
+  const headers = ["Date", "Debut", "Fin", "J+1"];
+  const rows = data.map(item => [item.date, item.start, item.end, item.j1]);
+  return [headers.join(","), ...rows.map(row => row.join(","))].join("\n");
+};
 
-  const headers = ["Date", "Debut", "Fin"];
-  const rows = data.map(item => [
-    item.date,
-    item.start,
-    item.end
-  ]);
-
-  const csvRows = [
-    headers.join(","),
-    ...rows.map(row => row.join(","))
-  ];
-
-  return csvRows.join("\n");
-}
-
-// Télécharger le fichier CSV
-function downloadCSV(csvContent) {
-  const now = new Date();
-  const formattedDate = now.toISOString()
-    .replace(/T/, '_')
-    .replace(/\..+/, '')
-    .replace(/:/g, '-');
-
-  const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+const downloadCSV = (csvContent) => {
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
-
-  // Créer un lien de téléchargement
   const a = document.createElement('a');
   a.href = url;
-  a.download = `HORAIRES_${formattedDate}.csv`;
+  a.download = `HORAIRES_${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-}
+};
+
+// Calcul de la durée de la pause déjeuner
+const calculateDuration = (start, end) => {
+  const startHours = parseInt(start.substring(0, 2), 10);
+  const startMinutes = parseInt(start.substring(2, 4), 10);
+  const endHours = parseInt(end.substring(0, 2), 10);
+  const endMinutes = parseInt(end.substring(2, 4), 10);
+
+  let totalMinutes = (endHours * 60 + endMinutes) - (startHours * 60 + startMinutes);
+  
+  if (totalMinutes < 0) {
+    totalMinutes += 24 * 60;
+  }
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return { hours, minutes };
+};
+
+const updateLunchDuration = () => {
+  const start = document.getElementById('lunch-start').value;
+  const end = document.getElementById('lunch-end').value;
+  const durationDisplay = document.getElementById('lunch-duration');
+
+  if (start.length === 4 && end.length === 4) {
+    const { hours, minutes } = calculateDuration(start, end);
+    durationDisplay.textContent = `${hours} heure(s) et ${minutes} minute(s)`;
+  } else {
+    durationDisplay.textContent = '0 heure(s) et 0 minute(s)';
+  }
+};
+
+// Initialisation de la pause déjeuner
+const setupLunchBreak = () => {
+  const lunchStart = document.getElementById('lunch-start');
+  const lunchEnd = document.getElementById('lunch-end');
+
+  if (lunchStart && lunchEnd) {
+    [lunchStart, lunchEnd].forEach(input => {
+      input.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '');
+        if (e.target.value.length > 4) {
+          e.target.value = e.target.value.slice(0, 4);
+        }
+        updateLunchDuration();
+      });
+    });
+  }
+};
 
 // Initialisation
-function init() {
-  // Vérifier que les éléments nécessaires existent
-  if (!elementExists('#year-select')) return;
+const init = () => {
+  if (!elementExists('#year-select') || !elementExists('tbody')) {
+    console.error('Éléments HTML manquants');
+    return;
+  }
 
-  // Générer les options d'années
   generateYearOptions();
-
-  // Configurer les fonctionnalités
-  setupDefaultHours();
-  setupReplaceHours();
-  setupExportCSV();
-  setupClearHours();
+  setupButtons();
+  setupLunchBreak();
 
   const yearSelect = document.getElementById('year-select');
-  const currentYear = new Date().getFullYear();
-
-  // Écouter les changements de sélection d'année
   yearSelect.addEventListener('change', (e) => {
     updateTable(Number(e.target.value));
   });
 
-  // Générer le tableau initial avec l'année courante
-  updateTable(currentYear);
+  updateTable(new Date().getFullYear());
+};
 
-  // Sélectionner l'année courante dans la liste déroulante
-  yearSelect.value = currentYear;
-}
-
-// Démarrer l'application
 document.addEventListener('DOMContentLoaded', init);

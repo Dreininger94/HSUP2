@@ -26,6 +26,29 @@ h1 {
   margin-bottom: 30px;
 }
 
+.lunch-break {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  font-size: 1em;
+}
+
+.lunch-break label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.duration-label {
+  margin-left: 15px;
+  font-weight: bold;
+}
+
+#lunch-duration {
+  color: var(--accent-color);
+}
+
 .controls {
   display: flex;
   justify-content: space-between;
@@ -40,14 +63,23 @@ select {
   border-radius: 4px;
 }
 
+.buttons {
+  display: flex;
+  gap: 10px;
+}
+
 .buttons button {
   background-color: var(--accent-color);
   color: var(--text-color);
   border: none;
-  padding: 5px 10px;
-  margin-left: 5px;
+  padding: 8px 16px;
   cursor: pointer;
   border-radius: 4px;
+  font-size: 14px;
+}
+
+.buttons button:hover {
+  opacity: 0.9;
 }
 
 table {
@@ -76,7 +108,12 @@ th {
   border-radius: 4px;
 }
 
-/* Styles pour la modal */
+.j1-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
 .modal {
   display: none;
   position: fixed;

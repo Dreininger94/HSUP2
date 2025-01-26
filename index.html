@@ -10,11 +10,23 @@
   <div class="container">
     <h1>Saisie des heures</h1>
 
-    <div class="controls">
-      <select id="year-select">
-        <!-- Les options seront générées dynamiquement -->
-      </select>
+    <!-- Ligne pause déjeuner -->
+    <div class="lunch-break">
+      <span>Pause déjeuner</span>
+      <label>
+        De:
+        <input type="text" class="time-input" maxlength="4" id="lunch-start">
+      </label>
+      <label>
+        À:
+        <input type="text" class="time-input" maxlength="4" id="lunch-end">
+      </label>
+      <span class="duration-label">Soit <span id="lunch-duration">0 heure(s) et 0 minute(s)</span></span>
+    </div>
 
+    <!-- Contrôles principaux -->
+    <div class="controls">
+      <select id="year-select"></select>
       <div class="buttons">
         <button id="default-hours-btn">Horaires types</button>
         <button id="replace-hours-btn">Remplacer heures</button>
@@ -23,7 +35,7 @@
       </div>
     </div>
 
-    <!-- Modal pour les horaires types -->
+    <!-- Modals -->
     <div id="default-hours-modal" class="modal">
       <div class="modal-content">
         <h2>Horaires types</h2>
@@ -41,7 +53,6 @@
       </div>
     </div>
 
-    <!-- Modal pour remplacer les heures -->
     <div id="replace-hours-modal" class="modal">
       <div class="modal-content">
         <h2>Remplacer heures</h2>
@@ -69,6 +80,7 @@
       </div>
     </div>
 
+    <!-- Tableau principal -->
     <table>
       <thead>
         <tr>
@@ -76,14 +88,12 @@
           <th>Jour</th>
           <th>Début</th>
           <th>Fin</th>
+          <th>J+1</th>
         </tr>
       </thead>
-      <tbody>
-        <!-- Le contenu sera généré dynamiquement -->
-      </tbody>
+      <tbody></tbody>
     </table>
   </div>
-
   <script src="script.js"></script>
 </body>
 </html>
